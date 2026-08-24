@@ -4,7 +4,7 @@ const router = express.Router();
 const autenticar = require("../middlewares/authMiddleware");
 const autorizar = require("../middlewares/autorizar");
 
-const { criarAluno, listarAlunos } = require("../controllers/alunoController");
+const { criarAluno, listarAlunos, buscarAluno, editarAluno, removerAluno } = require("../controllers/alunoController");
 
 router.post(
     "/",
@@ -17,6 +17,26 @@ router.get(
     autenticar,
     autorizar("admin"),
     listarAlunos
+);
+
+router.get("/:id",
+    autenticar,
+    autorizar("admin"),
+    buscarAluno
+)
+
+router.put(
+    "/:id",
+    autenticar,
+    autorizar("admin"),
+    editarAluno
+);
+
+router.delete(
+    "/:id",
+    autenticar,
+    autorizar("admin"),
+    removerAluno
 );
 
 
