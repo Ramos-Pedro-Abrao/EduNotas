@@ -12,6 +12,7 @@ async function criarAluno(req, res) {
 
     const conexao = await pool.getConnection();
 
+    
     try {
         await conexao.beginTransaction();
 

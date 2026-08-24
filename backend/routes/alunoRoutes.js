@@ -19,4 +19,5 @@ router.get(
     listarAlunos
 );
 
+
 module.exports = router;
