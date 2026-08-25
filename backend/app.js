@@ -4,6 +4,7 @@ const authRoutes = require("./routes/authRoutes");
 const autenticar = require("./middlewares/authMiddleware");
 const autorizar = require("./middlewares/autorizar");
 const alunoRoutes = require("./routes/alunoRoutes");
+const professorRoutes = require("./routes/professorRoutes");
 
 require("dotenv").config();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/alunos", alunoRoutes);
+app.use("/api/professores", professorRoutes);
 
 app.get("/", async (req, res) => {
     try {
