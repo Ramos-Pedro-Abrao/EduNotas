@@ -68,7 +68,112 @@ async function listarProfessores(req, res) {
     }
 }
 
+async function buscarProfessor(req, res) {
+    const { id } = req.params;
+
+    try {
+        const [professores] = await pool.query(
+            `SELECT professores.id, professores.nome, professores.telefone, utilizadores.email
+             FROM professores
+             JOIN utilizadores ON professores.utilizador_id = utilizadores.id
+             WHERE professores.id = ?`,
+            [id]
+        );
+
+        if (professores.length === 0) {
+            return res.status(404).json({
+                erro: "Professor não encontrado."
+            });
+        }
+
+        res.status(200).json(professores[0]);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            erro: "Erro ao buscar professor."
+        });
+    }
+}
+
+async function editarProfessor(req, res) {
+    const { id } = req.params;
+    const { nome, telefone } = req.body;
+
+    if (!nome || !telefone) {
+        return res.status(400).json({
+            erro: "Nome e telefone são obrigatórios."
+        });
+    }
+
+    try {
+        const [resultado] = await pool.query(
+            `UPDATE professores
+             SET nome = ?, telefone = ?
+             WHERE id = ?`,
+            [nome, telefone, id]
+        );
+
+        if (resultado.affectedRows === 0) {
+            return res.status(404).json({
+                erro: "Professor não encontrado."
+            });
+        }
+
+        res.status(200).json({
+            mensagem: "Professor atualizado com sucesso!"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            erro: "Erro ao atualizar professor."
+        });
+    }
+}
+
+async function removerProfessor(req, res) {
+    const { id } = req.params;
+
+    const conexao = await pool.getConnection();
+
+    try {
+        const [professores] = await conexao.query(
+            `SELECT utilizador_id FROM professores WHERE id = ?`,
+            [id]
+        );
+
+        if (professores.length === 0) {
+            return res.status(404).json({
+                erro: "Professor não encontrado."
+            });
+        }
+
+        const utilizadorId = professores[0].utilizador_id;
+
+        await conexao.query(
+            `DELETE FROM utilizadores WHERE id = ?`,
+            [utilizadorId]
+        );
+
+        res.status(200).json({
+            mensagem: "Professor removido com sucesso!"
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            erro: "Erro ao remover professor."
+        });
+    } finally {
+        conexao.release();
+    }
+}
+
 module.exports = {
     criarProfessor,
-    listarProfessores
+    listarProfessores,
+    buscarProfessor,
+    editarProfessor,
+    removerProfessor
 };
