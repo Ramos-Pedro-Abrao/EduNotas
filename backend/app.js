@@ -5,6 +5,8 @@ const autenticar = require("./middlewares/authMiddleware");
 const autorizar = require("./middlewares/autorizar");
 const alunoRoutes = require("./routes/alunoRoutes");
 const professorRoutes = require("./routes/professorRoutes");
+const cursoRoutes = require("./routes/cursoRoutes");
+const classeRoutes = require("./routes/classeRoutes");
 
 require("dotenv").config();
 
@@ -14,6 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/alunos", alunoRoutes);
 app.use("/api/professores", professorRoutes);
+app.use("/api/cursos", cursoRoutes);
+app.use("/api/classes", classeRoutes);
 
 app.get("/", async (req, res) => {
     try {
