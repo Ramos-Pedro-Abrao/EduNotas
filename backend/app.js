@@ -8,6 +8,7 @@ const professorRoutes = require("./routes/professorRoutes");
 const cursoRoutes = require("./routes/cursoRoutes");
 const classeRoutes = require("./routes/classeRoutes");
 const turmaRoutes = require("./routes/turmaRoutes");
+const disciplinaRoutes = require("./routes/disciplinaRoutes");
 
 require("dotenv").config();
 
