@@ -21,6 +21,7 @@ app.use("/api/professores", professorRoutes);
 app.use("/api/cursos", cursoRoutes);
 app.use("/api/classes", classeRoutes);
 app.use("/api/turmas", turmaRoutes);
+app.use("/api/disciplinas", disciplinaRoutes);
 
 app.get("/", async (req, res) => {
     try {
