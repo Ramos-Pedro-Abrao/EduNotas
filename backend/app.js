@@ -9,6 +9,8 @@ const cursoRoutes = require("./routes/cursoRoutes");
 const classeRoutes = require("./routes/classeRoutes");
 const turmaRoutes = require("./routes/turmaRoutes");
 const disciplinaRoutes = require("./routes/disciplinaRoutes");
+const lecaoRoutes = require("./routes/lecaoRoutes");
+const notaRoutes = require("./routes/notaRoutes");
 
 require("dotenv").config();
 
@@ -22,6 +24,8 @@ app.use("/api/cursos", cursoRoutes);
 app.use("/api/classes", classeRoutes);
 app.use("/api/turmas", turmaRoutes);
 app.use("/api/disciplinas", disciplinaRoutes);
+app.use("/api/lecoes", lecaoRoutes);
+app.use("/api/notas", notaRoutes);  
 
 app.get("/", async (req, res) => {
     try {
