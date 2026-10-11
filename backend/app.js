@@ -11,12 +11,14 @@ const turmaRoutes = require("./routes/turmaRoutes");
 const disciplinaRoutes = require("./routes/disciplinaRoutes");
 const lecaoRoutes = require("./routes/lecaoRoutes");
 const notaRoutes = require("./routes/notaRoutes");
+const path = require("path");
 
 require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/api/auth", authRoutes);
 app.use("/api/alunos", alunoRoutes);
 app.use("/api/professores", professorRoutes);
