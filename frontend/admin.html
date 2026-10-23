@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNotas - Admin</title>
+    <link rel="stylesheet" href="css/painel.css">
+</head>
+<body>
+    <header>
+        <h1>EduNotas - Admin</h1>
+        <button onclick="sair()">Sair</button>
+    </header>
+
+    <main>
+        <h2>Alunos</h2>
+
+        <form id="form-aluno">
+            <input type="text" id="nome" placeholder="Nome" required>
+            <input type="text" id="matricula" placeholder="Matrícula" required>
+            <input type="text" id="telefone" placeholder="Telefone">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="senha" placeholder="Senha" required>
+            <button type="submit">Criar aluno</button>
+        </form>
+
+        <p id="mensagem" class="mensagem"></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Nome</th><th>Matrícula</th>
+                    <th>Telefone</th><th>Email</th><th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-alunos"></tbody>
+        </table>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
