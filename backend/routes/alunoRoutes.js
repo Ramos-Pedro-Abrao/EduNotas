@@ -9,33 +9,33 @@ const { criarAluno, listarAlunos, buscarAluno, editarAluno, removerAluno } = req
 router.post(
     "/",
     autenticar,
-    autorizar("admin"),
+    autorizar("professor"),
     criarAluno
 );
 router.get(
     "/",
     autenticar,
-    autorizar("admin"),
+    autorizar("professor"),
     listarAlunos
 );
 
 router.get("/:id",
     autenticar,
-    autorizar("admin"),
+    autorizar("professor"),
     buscarAluno
 )
 
 router.put(
     "/:id",
     autenticar,
-    autorizar("admin"),
+    autorizar("professor"),
     editarAluno
 );
 
 router.delete(
     "/:id",
     autenticar,
-    autorizar("admin"),
+    autorizar("professor"),
     removerAluno
 );
 

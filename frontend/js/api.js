@@ -4,7 +4,10 @@ function verificarAcesso(tipoEsperado) {
 
     if (!token || tipo !== tipoEsperado) {
         window.location.href = "/";
+        return false;
     }
+
+    return true;
 }
 
 async function api(url, metodo = "GET", corpo = null) {
@@ -26,10 +29,15 @@ async function api(url, metodo = "GET", corpo = null) {
     if (resposta.status === 401) {
         localStorage.clear();
         window.location.href = "/";
-        return;
     }
 
-    const dados = await resposta.json();
+    let dados;
+    try {
+        dados = await resposta.json();
+    } catch (error) {
+        dados = { erro: "O servidor devolveu uma resposta inválida." };
+    }
+
     return { ok: resposta.ok, dados };
 }
 

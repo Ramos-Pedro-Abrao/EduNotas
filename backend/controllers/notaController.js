@@ -3,11 +3,27 @@ const pool = require("../config/database");
 async function lancarNota(req, res) {
     const { aluno_id, lecao_id, av1, av2, av3, prova_professor, prova_trimestral } = req.body;
 
-    if (!aluno_id || !lecao_id) {
+    const camposNota = { av1, av2, av3, prova_professor, prova_trimestral };
+    const notaInvalida = Object.values(camposNota).some((valor) =>
+        valor !== undefined && valor !== null && valor !== "" &&
+        (!Number.isFinite(Number(valor)) || Number(valor) < 0 || Number(valor) > 20)
+    );
+    const semNotas = Object.values(camposNota).every((valor) =>
+        valor === undefined || valor === null || valor === ""
+    );
+
+    if (!aluno_id || !lecao_id || notaInvalida || semNotas) {
         return res.status(400).json({
-            erro: "aluno_id e lecao_id são obrigatórios."
+            erro: "aluno_id e lecao_id são obrigatórios; as notas devem estar entre 0 e 20 valores."
         });
     }
+
+    const valoresNota = Object.fromEntries(
+        Object.entries(camposNota).map(([campo, valor]) => [
+            campo,
+            valor === undefined || valor === null || valor === "" ? null : Number(valor)
+        ])
+    );
 
     try {
         // 1. Confirmar que o utilizador logado é um professor
@@ -36,6 +52,19 @@ async function lancarNota(req, res) {
             });
         }
 
+        const [alunos] = await pool.query(
+            `SELECT id FROM alunos WHERE id = ? AND turma_id = (
+                SELECT turma_id FROM lecoes WHERE id = ?
+             )`,
+            [aluno_id, lecao_id]
+        );
+
+        if (alunos.length === 0) {
+            return res.status(400).json({
+                erro: "O aluno não está inscrito na turma desta disciplina."
+            });
+        }
+
         // 3. Criar ou atualizar a nota
         await pool.query(
             `INSERT INTO notas (aluno_id, lecao_id, av1, av2, av3, prova_professor, prova_trimestral)
@@ -47,8 +76,10 @@ async function lancarNota(req, res) {
                 prova_professor = COALESCE(?, prova_professor),
                 prova_trimestral = COALESCE(?, prova_trimestral)`,
             [
-                aluno_id, lecao_id, av1, av2, av3, prova_professor, prova_trimestral,
-                av1, av2, av3, prova_professor, prova_trimestral
+                aluno_id, lecao_id, valoresNota.av1, valoresNota.av2, valoresNota.av3,
+                valoresNota.prova_professor, valoresNota.prova_trimestral,
+                valoresNota.av1, valoresNota.av2, valoresNota.av3,
+                valoresNota.prova_professor, valoresNota.prova_trimestral
             ]
         );
 
