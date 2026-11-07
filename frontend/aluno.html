@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#122a43">
+    <title>EduNotas - Aluno</title>
+    <link rel="stylesheet" href="css/painel.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="/aluno.html" aria-label="EduNotas, início">
+                <span class="brand-mark" aria-hidden="true">E</span>
+                <span>Edu<span class="brand-accent">Notas</span><small>ÁREA DO ALUNO</small></span>
+            </a>
+            <p class="nav-caption">MENU PRINCIPAL</p>
+            <nav aria-label="Menu principal">
+                <a class="nav-link active" href="/aluno.html" aria-current="page">
+                    <span class="nav-icon" aria-hidden="true">▦</span> As minhas notas
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <span class="avatar" aria-hidden="true">A</span>
+                <span class="user-label"><strong>Aluno</strong><small>Área escolar</small></span>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">ÁREA DO ALUNO</p>
+                    <h1>EduNotas - Aluno</h1>
+                    <p class="page-description">Consulta as tuas notas por disciplina.</p>
+                </div>
+                <button class="button button-secondary" id="botao-sair" type="button">Sair</button>
+            </header>
+
+            <section class="panel" aria-labelledby="notas-titulo">
+                <div class="panel-heading">
+                    <div>
+                        <h2 id="notas-titulo">As minhas notas</h2>
+                        <p>As notas são apresentadas na escala de 0 a 20.</p>
+                    </div>
+                </div>
+
+                <p id="mensagem" class="notice" role="status" aria-live="polite"></p>
+
+                <div id="estado-vazio" class="lesson-state" hidden></div>
+
+                <div id="tabela-notas-wrap" class="table-wrap" hidden>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Disciplina</th>
+                                <th scope="col">Turma</th>
+                                <th scope="col">Avaliação 1</th>
+                                <th scope="col">Avaliação 2</th>
+                                <th scope="col">Avaliação 3</th>
+                                <th scope="col">Prova do Professor</th>
+                                <th scope="col">Prova Trimestral</th>
+                                <th scope="col">Média das avaliações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-notas"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/aluno.js"></script>
+</body>
+</html>
