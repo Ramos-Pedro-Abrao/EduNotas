@@ -195,11 +195,6 @@ async function removerAluno(req, res) {
 
     } catch (error) {
         console.error(error);
-        if (error.code === "ER_ROW_IS_REFERENCED_2") {
-        return res.status(409).json({
-        erro: "Este aluno já tem notas lançadas e não pode ser removido."
-        });
-    }
         res.status(500).json({
             erro: "Erro ao remover aluno."
         });
