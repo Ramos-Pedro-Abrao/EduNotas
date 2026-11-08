@@ -74,9 +74,12 @@ async function editarDisciplina(req, res) {
         );
 
         if (resultado.affectedRows === 0) {
-            return res.status(404).json({
-                erro: "Disciplina não encontrada."
-            });
+            const [disciplinas] = await pool.query(`SELECT id FROM disciplinas WHERE id = ?`, [id]);
+            if (disciplinas.length === 0) {
+                return res.status(404).json({
+                    erro: "Disciplina não encontrada."
+                });
+            }
         }
 
         res.status(200).json({

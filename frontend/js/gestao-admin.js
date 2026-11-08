@@ -5,7 +5,6 @@ if (verificarAcesso("admin")) {
     const corpoTabela = document.getElementById("tabela-entidade");
     const botaoGuardar = document.getElementById("guardar-entidade");
     const botaoCancelar = document.getElementById("cancelar-edicao");
-    const estadoDependencias = document.getElementById("estado-dependencias");
     const tituloFormulario = document.getElementById("titulo-formulario");
     let registos = [];
     let idEmEdicao = null;
@@ -16,64 +15,7 @@ if (verificarAcesso("admin")) {
     botaoCancelar.addEventListener("click", limparFormulario);
 
     const campos = [...formulario.querySelectorAll("[name]")];
-    const selectCurso = document.getElementById("curso-id");
-    const selectClasse = document.getElementById("classe-id");
-
-    if (configuracao.entidade === "turmas") carregarDependencias();
     carregarRegistos();
-
-    async function carregarDependencias() {
-        try {
-            const [respostaCursos, respostaClasses] = await Promise.all([
-                api("/api/cursos"),
-                api("/api/classes")
-            ]);
-
-            if (!respostaCursos?.ok || !Array.isArray(respostaCursos.dados)) {
-                mostrarAviso(respostaCursos?.dados?.erro || "Não foi possível carregar os cursos.", "error");
-                definirEstadoDependencias(false, "Não foi possível carregar cursos e classes.");
-                return;
-            }
-            if (!respostaClasses?.ok || !Array.isArray(respostaClasses.dados)) {
-                mostrarAviso(respostaClasses?.dados?.erro || "Não foi possível carregar as classes.", "error");
-                definirEstadoDependencias(false, "Não foi possível carregar cursos e classes.");
-                return;
-            }
-
-            const cursos = respostaCursos.dados;
-            const classes = respostaClasses.dados;
-            if (cursos.length === 0 || classes.length === 0) {
-                definirEstadoDependencias(false, "Cria primeiro pelo menos um curso e uma classe.");
-                return;
-            }
-
-            preencherSelect(selectCurso, cursos, "Seleciona um curso");
-            preencherSelect(selectClasse, classes, "Seleciona uma classe");
-            definirEstadoDependencias(true);
-        } catch (error) {
-            mostrarAviso("Não foi possível ligar ao servidor para carregar cursos e classes.", "error");
-            definirEstadoDependencias(false, "Não foi possível carregar cursos e classes.");
-        }
-    }
-
-    function definirEstadoDependencias(disponiveis, mensagemEstado = "") {
-        estadoDependencias.hidden = disponiveis;
-        formulario.querySelectorAll(".campo-turma").forEach((campo) => {
-            campo.hidden = !disponiveis;
-        });
-        botaoGuardar.disabled = !disponiveis;
-
-        if (!disponiveis) {
-            selectCurso.replaceChildren();
-            selectClasse.replaceChildren();
-            estadoDependencias.textContent = mensagemEstado;
-        }
-    }
-
-    function preencherSelect(select, items, placeholder) {
-        select.replaceChildren(new Option(placeholder, ""));
-        items.forEach((item) => select.add(new Option(item.nome, String(item.id))));
-    }
 
     async function carregarRegistos() {
         corpoTabela.replaceChildren(criarEstado(`A carregar ${configuracao.plural.toLocaleLowerCase("pt")}...`));
@@ -184,7 +126,7 @@ if (verificarAcesso("admin")) {
         } catch (error) {
             mostrarAviso("Não foi possível ligar ao servidor. Tenta novamente.", "error");
         } finally {
-            botaoGuardar.disabled = configuracao.entidade === "turmas" && !estadoDependencias.hidden;
+            botaoGuardar.disabled = false;
         }
     }
 

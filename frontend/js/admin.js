@@ -21,6 +21,8 @@ if (verificarAcesso("admin")) {
     let avisoTimer;
     let professorSelecionado = null;
     let atribuicoes = [];
+    let turmasDisponiveis = [];
+    let disciplinasGlobais = [];
 
     document.getElementById("botao-sair").addEventListener("click", sair);
     document.getElementById("novo-professor").addEventListener("click", () => abrirFormulario());
@@ -33,6 +35,7 @@ if (verificarAcesso("admin")) {
     });
     form.addEventListener("submit", guardarProfessor);
     formularioAtribuicao.addEventListener("submit", guardarAtribuicao);
+    selectTurma.addEventListener("change", carregarDisciplinasDaTurma);
     carregarProfessores();
 
     async function carregarProfessores() {
@@ -253,21 +256,23 @@ if (verificarAcesso("admin")) {
                     return;
                 }
 
-                preencherOpcoes(selectTurma, respostaTurmas.dados, (turma) =>
+                turmasDisponiveis = respostaTurmas.dados;
+                disciplinasGlobais = respostaDisciplinas.dados;
+                preencherOpcoes(selectTurma, turmasDisponiveis, (turma) =>
                     `${turma.nome || ""} - ${turma.curso || ""} - ${turma.classe || ""}`
                 );
-                preencherOpcoes(selectDisciplina, respostaDisciplinas.dados, (disciplina) => disciplina.nome || "");
                 atribuicoes = respostaLecoes.dados.filter((lecao) =>
                     String(lecao.professor_id) === String(professor.id)
                 );
                 renderizarAtribuicoes();
 
-                if (respostaTurmas.dados.length === 0 || respostaDisciplinas.dados.length === 0) {
+                if (turmasDisponiveis.length === 0 || disciplinasGlobais.length === 0) {
                     mostrarFaltaDeOpcoes();
                     return;
                 }
                 limparEstadoAtribuicoes();
                 formularioAtribuicao.hidden = false;
+                await carregarDisciplinasDaTurma();
             } catch (error) {
                 mostrarErroAtribuicoes("Não foi possível ligar ao servidor. Tenta novamente.");
                 tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("Não foi possível carregar as atribuições."));
@@ -322,17 +327,47 @@ if (verificarAcesso("admin")) {
             return linha;
         }
 
-        function mostrarFaltaDeOpcoes() {
+        function mostrarFaltaDeOpcoes(turma = null) {
             estadoAtribuicoes.replaceChildren(document.createTextNode("Cria primeiro "));
-            const linkTurmas = document.createElement("a");
-            linkTurmas.href = "/turmas.html";
-            linkTurmas.textContent = "turmas";
-            const linkDisciplinas = document.createElement("a");
-            linkDisciplinas.href = "/disciplinas.html";
-            linkDisciplinas.textContent = "disciplinas";
-            estadoAtribuicoes.append(linkTurmas, document.createTextNode(" e "), linkDisciplinas, document.createTextNode("."));
+            const link = document.createElement("a");
+            if (turmasDisponiveis.length === 0) {
+                link.href = "/cursos.html";
+                link.textContent = "classes e turmas num curso";
+            } else if (disciplinasGlobais.length === 0) {
+                link.href = "/disciplinas.html";
+                link.textContent = "disciplinas";
+            } else {
+                link.href = `/curso.html?id=${encodeURIComponent(turma?.curso_id || turmasDisponiveis[0].curso_id)}`;
+                link.textContent = "associar disciplinas ao curso desta turma";
+            }
+            estadoAtribuicoes.append(link, document.createTextNode("."));
             estadoAtribuicoes.hidden = false;
-            formularioAtribuicao.hidden = true;
+            formularioAtribuicao.hidden = turmasDisponiveis.length === 0 || disciplinasGlobais.length === 0;
+        }
+
+        async function carregarDisciplinasDaTurma() {
+            const turma = turmasDisponiveis.find((item) => String(item.id) === selectTurma.value);
+            if (!turma) {
+                preencherOpcoes(selectDisciplina, [], () => "");
+                return;
+            }
+
+            try {
+                const resposta = await api(`/api/cursos/${encodeURIComponent(turma.curso_id)}/disciplinas`);
+                if (!resposta?.ok || !Array.isArray(resposta.dados)) {
+                    mostrarErroAtribuicoes(erroDaResposta(resposta, "Não foi possível carregar as disciplinas deste curso."));
+                    return;
+                }
+                preencherOpcoes(selectDisciplina, resposta.dados, (disciplina) => disciplina.nome || "");
+                if (resposta.dados.length === 0) {
+                    mostrarFaltaDeOpcoes(turma);
+                } else {
+                    limparEstadoAtribuicoes();
+                    formularioAtribuicao.hidden = false;
+                }
+            } catch (error) {
+                mostrarErroAtribuicoes("Não foi possível ligar ao servidor. Tenta novamente.");
+            }
         }
 
         async function guardarAtribuicao(evento) {
@@ -408,6 +443,8 @@ if (verificarAcesso("admin")) {
             painelAtribuicoes.hidden = true;
             professorSelecionado = null;
             atribuicoes = [];
+            turmasDisponiveis = [];
+            disciplinasGlobais = [];
         }
 
     function erroDaResposta(resposta, alternativa) {

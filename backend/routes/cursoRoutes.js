@@ -11,6 +11,32 @@ const {
     editarCurso,
     removerCurso
 } = require("../controllers/cursoController");
+const {
+    listarDisciplinasDoCurso,
+    associarDisciplinaAoCurso,
+    desassociarDisciplinaDoCurso
+} = require("../controllers/cursoDisciplinaController");
+
+router.get(
+    "/:id/disciplinas",
+    autenticar,
+    autorizar("admin"),
+    listarDisciplinasDoCurso
+);
+
+router.post(
+    "/:id/disciplinas",
+    autenticar,
+    autorizar("admin"),
+    associarDisciplinaAoCurso
+);
+
+router.delete(
+    "/:id/disciplinas/:disciplina_id",
+    autenticar,
+    autorizar("admin"),
+    desassociarDisciplinaDoCurso
+);
 
 router.post(
     "/",

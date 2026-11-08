@@ -11,7 +11,7 @@ async function minhasLecoes(req, res) {
              JOIN professores ON lecoes.professor_id = professores.id
              JOIN turmas ON lecoes.turma_id = turmas.id
              JOIN classes ON turmas.classe_id = classes.id
-             JOIN cursos ON turmas.curso_id = cursos.id
+             JOIN cursos ON classes.curso_id = cursos.id
              JOIN disciplinas ON lecoes.disciplina_id = disciplinas.id
              WHERE professores.utilizador_id = ?
              ORDER BY turmas.nome, disciplinas.nome`,
@@ -33,7 +33,7 @@ async function minhasTurmas(req, res) {
              JOIN professores ON lecoes.professor_id = professores.id
              JOIN turmas ON lecoes.turma_id = turmas.id
              JOIN classes ON turmas.classe_id = classes.id
-             JOIN cursos ON turmas.curso_id = cursos.id
+             JOIN cursos ON classes.curso_id = cursos.id
              WHERE professores.utilizador_id = ?
              ORDER BY turmas.nome`,
             [req.usuario.id]

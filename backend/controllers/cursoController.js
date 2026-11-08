@@ -74,9 +74,12 @@ async function editarCurso(req, res) {
         );
 
         if (resultado.affectedRows === 0) {
-            return res.status(404).json({
-                erro: "Curso não encontrado."
-            });
+            const [cursos] = await pool.query(`SELECT id FROM cursos WHERE id = ?`, [id]);
+            if (cursos.length === 0) {
+                return res.status(404).json({
+                    erro: "Curso não encontrado."
+                });
+            }
         }
 
         res.status(200).json({
@@ -108,7 +111,7 @@ async function removerCurso(req, res) {
         });
 
     } catch (error) {
-        responderErroBanco(res, error, "Erro ao remover curso.", "Este curso tem turmas associadas. Remove-as primeiro.");
+        responderErroBanco(res, error, "Erro ao remover curso.", "Este curso tem classes ou disciplinas associadas. Remove-as primeiro.");
     }
 }
 

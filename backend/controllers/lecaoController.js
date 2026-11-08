@@ -1,5 +1,18 @@
 const pool = require("../config/database");
 
+async function disciplinaPertenceAoCurso(turmaId, disciplinaId) {
+    const [associacoes] = await pool.query(
+        `SELECT curso_disciplinas.disciplina_id
+         FROM turmas
+         JOIN classes ON turmas.classe_id = classes.id
+         JOIN curso_disciplinas ON classes.curso_id = curso_disciplinas.curso_id
+         WHERE turmas.id = ? AND curso_disciplinas.disciplina_id = ?
+         LIMIT 1`,
+        [turmaId, disciplinaId]
+    );
+    return associacoes.length > 0;
+}
+
 async function criarLecao(req, res) {
     const { professor_id, turma_id, disciplina_id } = req.body;
 
@@ -10,6 +23,12 @@ async function criarLecao(req, res) {
     }
 
     try {
+        if (!(await disciplinaPertenceAoCurso(turma_id, disciplina_id))) {
+            return res.status(400).json({
+                erro: "Esta disciplina não pertence ao curso desta turma."
+            });
+        }
+
         const [atribuicoes] = await pool.query(
             `SELECT id FROM lecoes
              WHERE professor_id = ? AND turma_id = ? AND disciplina_id = ?
@@ -113,6 +132,22 @@ async function editarLecao(req, res) {
     }
 
     try {
+        if (!(await disciplinaPertenceAoCurso(turma_id, disciplina_id))) {
+            return res.status(400).json({
+                erro: "Esta disciplina não pertence ao curso desta turma."
+            });
+        }
+
+        const [duplicadas] = await pool.query(
+            `SELECT id FROM lecoes
+             WHERE professor_id = ? AND turma_id = ? AND disciplina_id = ? AND id <> ?
+             LIMIT 1`,
+            [professor_id, turma_id, disciplina_id, id]
+        );
+        if (duplicadas.length > 0) {
+            return res.status(409).json({ erro: "Esta atribuição já existe." });
+        }
+
         const [resultado] = await pool.query(
             `UPDATE lecoes SET professor_id = ?, turma_id = ?, disciplina_id = ? WHERE id = ?`,
             [professor_id, turma_id, disciplina_id, id]
@@ -129,6 +164,12 @@ async function editarLecao(req, res) {
         });
 
     } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                erro: "Esta atribuição já existe."
+            });
+        }
+
         console.error(error);
         res.status(500).json({
             erro: "Erro ao atualizar lecao."

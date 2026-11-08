@@ -4,9 +4,7 @@ if (menuAdmin) {
     const secoesAdmin = [
         ["professores", "Professores", "/admin.html", "♙"],
         ["cursos", "Cursos", "/cursos.html", "▤"],
-        ["classes", "Classes", "/classes.html", "▦"],
-        ["disciplinas", "Disciplinas", "/disciplinas.html", "▥"],
-        ["turmas", "Turmas", "/turmas.html", "▧"]
+        ["disciplinas", "Disciplinas", "/disciplinas.html", "▥"]
     ];
 
     secoesAdmin.forEach(([id, titulo, url, icone]) => {
