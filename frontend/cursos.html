@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduNotas | Cursos</title>
+    <link rel="stylesheet" href="css/painel.css">
+</head>
+<body data-entidade="cursos" data-endpoint="/api/cursos" data-singular="Curso" data-plural="Cursos" data-colunas="nome,descricao" data-colspan="3">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="/admin.html" aria-label="EduNotas, início">
+                <span class="brand-mark" aria-hidden="true">E</span>
+                <span>Edu<span class="brand-accent">Notas</span><small>GESTÃO ESCOLAR</small></span>
+            </a>
+            <p class="nav-caption">MENU PRINCIPAL</p>
+            <nav id="menu-admin" data-active="cursos" aria-label="Menu principal"></nav>
+            <div class="sidebar-footer">
+                <span class="avatar" aria-hidden="true">A</span>
+                <span class="user-label"><strong>Administrador</strong><small>Gestão da escola</small></span>
+                <button class="logout-button" id="botao-sair" type="button" aria-label="Terminar sessão" title="Terminar sessão">↗</button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Gestão de cursos</h1><p class="page-description">Cria e mantém os cursos disponíveis na escola.</p></div>
+            </header>
+            <section class="panel">
+                <div class="panel-heading"><div><h2 id="titulo-formulario">Novo curso</h2><p>Preenche os dados do curso.</p></div></div>
+                <p id="estado-dependencias" class="notice error" role="status" hidden></p>
+                <form id="form-entidade" class="student-form">
+                    <label for="nome">Nome</label>
+                    <input id="nome" name="nome" type="text" required maxlength="100">
+                    <label for="descricao">Descrição <span>(opcional)</span></label>
+                    <textarea id="descricao" name="descricao" rows="3"></textarea>
+                    <p id="mensagem" class="notice" role="status" aria-live="polite"></p>
+                    <div class="dialog-actions">
+                        <button class="button button-secondary" id="cancelar-edicao" type="button" hidden>Cancelar edição</button>
+                        <button class="button button-primary" id="guardar-entidade" type="submit">Criar curso</button>
+                    </div>
+                </form>
+            </section>
+            <section class="panel entity-list">
+                <div class="panel-heading"><div><h2>Cursos registados</h2><p>Consulta, edita ou remove cursos.</p></div></div>
+                <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Descrição</th><th class="actions-heading">Ações</th></tr></thead>
+                    <tbody id="tabela-entidade"><tr><td class="table-state" colspan="3">A carregar cursos...</td></tr></tbody>
+                </table></div>
+            </section>
+        </main>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/admin-menu.js"></script>
+    <script src="js/gestao-admin.js"></script>
+</body>
+</html>

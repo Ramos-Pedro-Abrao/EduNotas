@@ -320,6 +320,14 @@ if (verificarAcesso("professor")) {
             linha.append(celula);
         });
 
+        const mediaAvaliacoes = document.createElement("td");
+        mediaAvaliacoes.textContent = formatarMedia(aluno.media_avaliacoes);
+        linha.append(mediaAvaliacoes);
+
+        const mediaFinal = document.createElement("td");
+        mediaFinal.textContent = formatarMedia(aluno.media_final);
+        linha.append(mediaFinal);
+
         const celulaAcao = document.createElement("td");
         const guardar = document.createElement("button");
         guardar.type = "button";
@@ -395,7 +403,7 @@ if (verificarAcesso("professor")) {
         const linha = document.createElement("tr");
         const celula = document.createElement("td");
         celula.className = "table-state";
-        celula.colSpan = 7;
+        celula.colSpan = 9;
         celula.textContent = texto;
         linha.append(celula);
         return linha;
@@ -413,6 +421,17 @@ if (verificarAcesso("professor")) {
 
     function erroDaResposta(resposta, alternativa) {
         return resposta?.dados?.erro || resposta?.dados?.mensagem || alternativa;
+    }
+
+    function formatarMedia(valor) {
+        if (valor === null || valor === undefined || valor === "") return "-";
+
+        const texto = String(valor);
+        const correspondencia = texto.match(/^(-?\d+)(?:\.(\d{1,2}))?$/);
+        if (!correspondencia) return texto;
+
+        const casasDecimais = correspondencia[2] || "";
+        return `${correspondencia[1]}.${casasDecimais.padEnd(2, "0")}`;
     }
 
     function mostrarAviso(elemento, texto, tipo) {

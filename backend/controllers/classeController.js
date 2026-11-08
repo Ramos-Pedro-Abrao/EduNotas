@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const responderErroBanco = require("../utils/responderErroBanco");
 
 async function criarClasse(req, res) {
     const { nome } = req.body;
@@ -20,10 +21,7 @@ async function criarClasse(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao criar classe."
-        });
+        responderErroBanco(res, error, "Erro ao criar classe.");
     }
 }
 
@@ -33,10 +31,7 @@ async function listarClasses(req, res) {
         res.status(200).json(classes);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao listar classes."
-        });
+        responderErroBanco(res, error, "Erro ao listar classes.");
     }
 }
 
@@ -58,10 +53,7 @@ async function buscarClasse(req, res) {
         res.status(200).json(classes[0]);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao buscar classe."
-        });
+        responderErroBanco(res, error, "Erro ao buscar classe.");
     }
 }
 
@@ -92,10 +84,7 @@ async function editarClasse(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao atualizar classe."
-        });
+        responderErroBanco(res, error, "Erro ao atualizar classe.");
     }
 }
 
@@ -119,10 +108,7 @@ async function removerClasse(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao remover classe."
-        });
+        responderErroBanco(res, error, "Erro ao remover classe.", "Esta classe tem turmas associadas. Remove-as primeiro.");
     }
 }
 

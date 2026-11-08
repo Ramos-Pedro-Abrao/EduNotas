@@ -10,6 +10,19 @@ async function criarLecao(req, res) {
     }
 
     try {
+        const [atribuicoes] = await pool.query(
+            `SELECT id FROM lecoes
+             WHERE professor_id = ? AND turma_id = ? AND disciplina_id = ?
+             LIMIT 1`,
+            [professor_id, turma_id, disciplina_id]
+        );
+
+        if (atribuicoes.length > 0) {
+            return res.status(409).json({
+                erro: "Esta atribuição já existe."
+            });
+        }
+
         await pool.query(
             `INSERT INTO lecoes (professor_id, turma_id, disciplina_id) VALUES (?, ?, ?)`,
             [professor_id, turma_id, disciplina_id]
@@ -20,6 +33,12 @@ async function criarLecao(req, res) {
         });
 
     } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                erro: "Esta atribuição já existe."
+            });
+        }
+
         console.error(error);
         res.status(500).json({
             erro: "Erro ao criar lecao."
@@ -30,7 +49,7 @@ async function criarLecao(req, res) {
 async function listarLecoes(req, res) {
     try {
         const [lecoes] = await pool.query(
-            `SELECT lecoes.id,
+            `SELECT lecoes.id, lecoes.professor_id, lecoes.turma_id, lecoes.disciplina_id,
                     professores.nome AS professor,
                     turmas.nome AS turma,
                     disciplinas.nome AS disciplina
@@ -55,7 +74,7 @@ async function buscarLecao(req, res) {
 
     try {
         const [lecoes] = await pool.query(
-            `SELECT lecoes.id,
+            `SELECT lecoes.id, lecoes.professor_id, lecoes.turma_id, lecoes.disciplina_id,
                     professores.nome AS professor,
                     turmas.nome AS turma,
                     disciplinas.nome AS disciplina
@@ -137,6 +156,12 @@ async function removerLecao(req, res) {
         });
 
     } catch (error) {
+        if (error.code === "ER_ROW_IS_REFERENCED_2") {
+            return res.status(409).json({
+                erro: "Esta atribuição já tem notas lançadas e não pode ser removida."
+            });
+        }
+
         console.error(error);
         res.status(500).json({
             erro: "Erro ao remover lecao."

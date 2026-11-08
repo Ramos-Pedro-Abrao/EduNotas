@@ -8,18 +8,31 @@ if (verificarAcesso("admin")) {
     const totalProfessores = document.getElementById("total-professores");
     const contadorResultados = document.getElementById("contador-resultados");
     const campoId = document.getElementById("professor-id");
+    const painelAtribuicoes = document.getElementById("painel-atribuicoes");
+    const tituloAtribuicoes = document.getElementById("titulo-atribuicoes");
+    const mensagemAtribuicoes = document.getElementById("mensagem-atribuicoes");
+    const estadoAtribuicoes = document.getElementById("estado-atribuicoes");
+    const tabelaAtribuicoes = document.getElementById("tabela-atribuicoes");
+    const formularioAtribuicao = document.getElementById("form-atribuicao");
+    const selectTurma = document.getElementById("atribuicao-turma");
+    const selectDisciplina = document.getElementById("atribuicao-disciplina");
+    const botaoAtribuir = document.getElementById("guardar-atribuicao");
     let professores = [];
     let avisoTimer;
+    let professorSelecionado = null;
+    let atribuicoes = [];
 
     document.getElementById("botao-sair").addEventListener("click", sair);
     document.getElementById("novo-professor").addEventListener("click", () => abrirFormulario());
     document.getElementById("fechar-dialogo").addEventListener("click", fecharFormulario);
     document.getElementById("cancelar-dialogo").addEventListener("click", fecharFormulario);
+    document.getElementById("fechar-atribuicoes").addEventListener("click", fecharAtribuicoes);
     pesquisa.addEventListener("input", renderizarProfessores);
     dialogo.addEventListener("click", (evento) => {
         if (evento.target === dialogo) fecharFormulario();
     });
     form.addEventListener("submit", guardarProfessor);
+    formularioAtribuicao.addEventListener("submit", guardarAtribuicao);
     carregarProfessores();
 
     async function carregarProfessores() {
@@ -72,6 +85,7 @@ if (verificarAcesso("admin")) {
         const telefone = document.createElement("td");
         const email = document.createElement("td");
         const acoes = document.createElement("td");
+        const atribuicoes = document.createElement("button");
         const editar = document.createElement("button");
         const remover = document.createElement("button");
 
@@ -88,6 +102,12 @@ if (verificarAcesso("admin")) {
         email.textContent = professor.email || "—";
         acoes.className = "actions-cell";
 
+        atribuicoes.className = "row-action assignment-action";
+        atribuicoes.type = "button";
+        atribuicoes.textContent = "Atribuições";
+        atribuicoes.setAttribute("aria-label", `Gerir atribuições de ${professor.nome}`);
+        atribuicoes.addEventListener("click", () => abrirAtribuicoes(professor));
+
         editar.className = "row-action";
         editar.type = "button";
         editar.textContent = "✎";
@@ -100,7 +120,7 @@ if (verificarAcesso("admin")) {
         remover.setAttribute("aria-label", `Remover ${professor.nome}`);
         remover.addEventListener("click", () => removerProfessor(professor));
 
-        acoes.append(editar, remover);
+        acoes.append(atribuicoes, editar, remover);
         linha.append(nome, telefone, email, acoes);
         return linha;
     }
@@ -167,6 +187,12 @@ if (verificarAcesso("admin")) {
             fecharFormulario();
             mostrarAviso(resposta.dados?.mensagem || "Professor guardado com sucesso.", "success");
             await carregarProfessores();
+            if (!id && resposta.dados?.id != null) {
+                const professorCriado = professores.find((professor) =>
+                    String(professor.id) === String(resposta.dados.id)
+                ) || { id: resposta.dados.id, nome: corpo.nome };
+                await abrirAtribuicoes(professorCriado);
+            }
         } catch (error) {
             erroFormulario.textContent = "Não foi possível ligar ao servidor. Tenta novamente.";
         } finally {
@@ -185,11 +211,204 @@ if (verificarAcesso("admin")) {
                 return;
             }
             mostrarAviso(resposta.dados?.mensagem || "Professor removido com sucesso.", "success");
+            if (professorSelecionado && String(professorSelecionado.id) === String(professor.id)) {
+                fecharAtribuicoes();
+            }
             await carregarProfessores();
         } catch (error) {
             mostrarAviso("Não foi possível ligar ao servidor. Tenta novamente.", "error");
         }
     }
+
+        async function abrirAtribuicoes(professor) {
+            professorSelecionado = professor;
+            painelAtribuicoes.hidden = false;
+            tituloAtribuicoes.textContent = `Atribuições de ${professor.nome}`;
+            mensagemAtribuicoes.textContent = "";
+            limparEstadoAtribuicoes();
+            formularioAtribuicao.hidden = true;
+            tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("A carregar atribuições..."));
+            painelAtribuicoes.scrollIntoView({ behavior: "smooth", block: "start" });
+
+            try {
+                const [respostaTurmas, respostaDisciplinas, respostaLecoes] = await Promise.all([
+                    api("/api/turmas"),
+                    api("/api/disciplinas"),
+                    api("/api/lecoes")
+                ]);
+
+                if (!respostaTurmas?.ok || !Array.isArray(respostaTurmas.dados)) {
+                    mostrarErroAtribuicoes(erroDaResposta(respostaTurmas, "Não foi possível carregar as turmas."));
+                    tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("Não foi possível carregar as atribuições."));
+                    return;
+                }
+                if (!respostaDisciplinas?.ok || !Array.isArray(respostaDisciplinas.dados)) {
+                    mostrarErroAtribuicoes(erroDaResposta(respostaDisciplinas, "Não foi possível carregar as disciplinas."));
+                    tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("Não foi possível carregar as atribuições."));
+                    return;
+                }
+                if (!respostaLecoes?.ok || !Array.isArray(respostaLecoes.dados)) {
+                    mostrarErroAtribuicoes(erroDaResposta(respostaLecoes, "Não foi possível carregar as atribuições."));
+                    tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("Não foi possível carregar as atribuições."));
+                    return;
+                }
+
+                preencherOpcoes(selectTurma, respostaTurmas.dados, (turma) =>
+                    `${turma.nome || ""} - ${turma.curso || ""} - ${turma.classe || ""}`
+                );
+                preencherOpcoes(selectDisciplina, respostaDisciplinas.dados, (disciplina) => disciplina.nome || "");
+                atribuicoes = respostaLecoes.dados.filter((lecao) =>
+                    String(lecao.professor_id) === String(professor.id)
+                );
+                renderizarAtribuicoes();
+
+                if (respostaTurmas.dados.length === 0 || respostaDisciplinas.dados.length === 0) {
+                    mostrarFaltaDeOpcoes();
+                    return;
+                }
+                limparEstadoAtribuicoes();
+                formularioAtribuicao.hidden = false;
+            } catch (error) {
+                mostrarErroAtribuicoes("Não foi possível ligar ao servidor. Tenta novamente.");
+                tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("Não foi possível carregar as atribuições."));
+            }
+        }
+
+        function preencherOpcoes(select, itens, obterRotulo) {
+            select.replaceChildren();
+            for (const item of itens) {
+                const opcao = document.createElement("option");
+                opcao.value = String(item.id);
+                opcao.textContent = obterRotulo(item);
+                select.append(opcao);
+            }
+        }
+
+        function renderizarAtribuicoes() {
+            if (atribuicoes.length === 0) {
+                tabelaAtribuicoes.replaceChildren(criarEstadoAtribuicoes("Ainda não existem atribuições para este professor."));
+                return;
+            }
+
+            tabelaAtribuicoes.replaceChildren(...atribuicoes.map(criarLinhaAtribuicao));
+        }
+
+        function criarLinhaAtribuicao(atribuicao) {
+            const linha = document.createElement("tr");
+            const turma = document.createElement("td");
+            const disciplina = document.createElement("td");
+            const acoes = document.createElement("td");
+            const remover = document.createElement("button");
+
+            turma.textContent = atribuicao.turma || "—";
+            disciplina.textContent = atribuicao.disciplina || "—";
+            acoes.className = "actions-cell";
+            remover.className = "row-action delete";
+            remover.type = "button";
+            remover.textContent = "Remover";
+            remover.addEventListener("click", () => removerAtribuicao(atribuicao));
+            acoes.append(remover);
+            linha.append(turma, disciplina, acoes);
+            return linha;
+        }
+
+        function criarEstadoAtribuicoes(texto) {
+            const linha = document.createElement("tr");
+            const celula = document.createElement("td");
+            celula.className = "table-state";
+            celula.colSpan = 3;
+            celula.textContent = texto;
+            linha.append(celula);
+            return linha;
+        }
+
+        function mostrarFaltaDeOpcoes() {
+            estadoAtribuicoes.replaceChildren(document.createTextNode("Cria primeiro "));
+            const linkTurmas = document.createElement("a");
+            linkTurmas.href = "/turmas.html";
+            linkTurmas.textContent = "turmas";
+            const linkDisciplinas = document.createElement("a");
+            linkDisciplinas.href = "/disciplinas.html";
+            linkDisciplinas.textContent = "disciplinas";
+            estadoAtribuicoes.append(linkTurmas, document.createTextNode(" e "), linkDisciplinas, document.createTextNode("."));
+            estadoAtribuicoes.hidden = false;
+            formularioAtribuicao.hidden = true;
+        }
+
+        async function guardarAtribuicao(evento) {
+            evento.preventDefault();
+            if (!professorSelecionado) return;
+
+            botaoAtribuir.disabled = true;
+            botaoAtribuir.textContent = "A atribuir...";
+            limparEstadoAtribuicoes();
+
+            try {
+                const resposta = await api("/api/lecoes", "POST", {
+                    professor_id: professorSelecionado.id,
+                    turma_id: selectTurma.value,
+                    disciplina_id: selectDisciplina.value
+                });
+                if (!resposta?.ok) {
+                    mostrarErroAtribuicoes(erroDaResposta(resposta, "Não foi possível criar a atribuição."));
+                    return;
+                }
+                mensagemAtribuicoes.textContent = resposta.dados?.mensagem || "Atribuição criada com sucesso.";
+                mensagemAtribuicoes.className = "notice success";
+                await carregarAtribuicoesDoProfessor();
+            } catch (error) {
+                mostrarErroAtribuicoes("Não foi possível ligar ao servidor. Tenta novamente.");
+            } finally {
+                botaoAtribuir.disabled = false;
+                botaoAtribuir.textContent = "Atribuir";
+            }
+        }
+
+        async function carregarAtribuicoesDoProfessor() {
+            const resposta = await api("/api/lecoes");
+            if (!resposta?.ok || !Array.isArray(resposta.dados)) {
+                mostrarErroAtribuicoes(erroDaResposta(resposta, "Não foi possível carregar as atribuições."));
+                return;
+            }
+            atribuicoes = resposta.dados.filter((lecao) =>
+                String(lecao.professor_id) === String(professorSelecionado.id)
+            );
+            renderizarAtribuicoes();
+        }
+
+        async function removerAtribuicao(atribuicao) {
+            if (!window.confirm("Remover esta atribuição?")) return;
+
+            try {
+                const resposta = await api(`/api/lecoes/${encodeURIComponent(atribuicao.id)}`, "DELETE");
+                if (!resposta?.ok) {
+                    mostrarErroAtribuicoes(erroDaResposta(resposta, "Não foi possível remover a atribuição."));
+                    return;
+                }
+                mensagemAtribuicoes.textContent = resposta.dados?.mensagem || "Atribuição removida com sucesso.";
+                mensagemAtribuicoes.className = "notice success";
+                await carregarAtribuicoesDoProfessor();
+            } catch (error) {
+                mostrarErroAtribuicoes("Não foi possível ligar ao servidor. Tenta novamente.");
+            }
+        }
+
+        function mostrarErroAtribuicoes(texto) {
+            estadoAtribuicoes.textContent = texto;
+            estadoAtribuicoes.className = "notice error";
+            estadoAtribuicoes.hidden = false;
+        }
+
+        function limparEstadoAtribuicoes() {
+            estadoAtribuicoes.textContent = "";
+            estadoAtribuicoes.hidden = true;
+        }
+
+        function fecharAtribuicoes() {
+            painelAtribuicoes.hidden = true;
+            professorSelecionado = null;
+            atribuicoes = [];
+        }
 
     function erroDaResposta(resposta, alternativa) {
         return resposta?.dados?.erro || resposta?.dados?.mensagem || alternativa;

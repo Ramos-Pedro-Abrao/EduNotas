@@ -121,6 +121,7 @@ td:first-child { color: #263c54; font-weight: 600; }
 .actions-heading { width: 100px; text-align: right; }
 .actions-cell { white-space: nowrap; text-align: right; }
 .row-action { width: 30px; height: 30px; margin-left: 4px; border: 1px solid transparent; border-radius: 6px; color: #74869a; background: transparent; }
+.row-action.assignment-action { width: auto; padding: 0 7px; font-size: 10px; }
 .row-action:hover { border-color: #e7ebf1; color: #356cf6; background: #f6f8fc; }
 .row-action.delete:hover { border-color: #ffe1df; color: #cf4e4e; background: #fff4f3; }
 .table-state { height: 118px; color: #8795a5 !important; font-weight: 400 !important; text-align: center; }
@@ -142,6 +143,15 @@ td:first-child { color: #263c54; font-weight: 600; }
 .grade-save:disabled { cursor: wait; opacity: .65; }
 .grade-empty { color: #8795a5; font-size: 11px; }
 .grade-panel[hidden] { display: none; }
+.assignment-panel { margin-top: 22px; }
+.assignment-panel[hidden] { display: none; }
+.assignment-form { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto; align-items: end; gap: 12px; padding: 0 24px 20px; }
+.assignment-form label { grid-row: 1; margin-bottom: -8px; color: #44566a; font-size: 11px; font-weight: 700; }
+.assignment-form select { min-width: 0; height: 41px; padding: 0 10px; border: 1px solid #e1e7ee; border-radius: 7px; color: #233a52; background: white; font: inherit; font-size: 12px; }
+.assignment-form label:nth-of-type(2) { grid-column: 2; }
+.assignment-form #atribuicao-turma { grid-column: 1; }
+.assignment-form #atribuicao-disciplina { grid-column: 2; }
+.assignment-form button { grid-column: 3; grid-row: 2; }
 .panel-subheading { padding-top: 0; }
 .class-filter { display: flex; align-items: center; gap: 9px; color: #75869a; font-size: 11px; font-weight: 600; }
 .class-filter select { min-width: 190px; height: 38px; padding: 0 10px; border: 1px solid #e5eaf0; border-radius: 7px; color: #263d55; background: white; font: inherit; }
@@ -155,8 +165,10 @@ td:first-child { color: #263c54; font-weight: 600; }
 .icon-button { width: 31px; height: 31px; border: 0; border-radius: 7px; color: #78889a; background: #f4f6f9; font-size: 22px; }
 .student-form label { display: block; margin: 14px 0 6px; color: #44566a; font-size: 11px; font-weight: 700; }
 .student-form label span { color: #94a0ad; font-weight: 400; }
-.student-form input:not([type="hidden"]), .student-form select { width: 100%; height: 41px; padding: 0 11px; border: 1px solid #e1e7ee; border-radius: 7px; outline: 0; color: #233a52; background: #fff; font-size: 12px; }
+.student-form input:not([type="hidden"]), .student-form select, .student-form textarea { width: 100%; min-height: 41px; padding: 10px 11px; border: 1px solid #e1e7ee; border-radius: 7px; outline: 0; color: #233a52; background: #fff; font-size: 12px; }
 .student-form input:focus { border-color: #91adff; box-shadow: 0 0 0 3px #356cf614; }
+.student-form textarea { resize: vertical; }
+.notice[hidden], .button[hidden], .campo-turma[hidden] { display: none; }
 .student-form input::placeholder { color: #a7b1bd; }
 .create-only { display: contents; }
 .create-only[hidden] { display: none; }
@@ -184,6 +196,10 @@ td:first-child { color: #263c54; font-weight: 600; }
     .summary-grid { grid-template-columns: 1fr; }
     .panel-heading { align-items: flex-start; flex-direction: column; padding: 19px 16px 15px; }
     .search-box { width: 100%; }
+    .assignment-form { grid-template-columns: 1fr; padding-right: 16px; padding-left: 16px; }
+    .assignment-form label, .assignment-form label:nth-of-type(2),
+    .assignment-form #atribuicao-turma, .assignment-form #atribuicao-disciplina,
+    .assignment-form button { grid-column: 1; grid-row: auto; }
     .lesson-list { grid-template-columns: 1fr; padding: 0 16px 16px; }
     th, td { padding-right: 12px; padding-left: 12px; }
     .notice { margin-right: 16px; margin-left: 16px; }

@@ -49,7 +49,8 @@ if (verificarAcesso("aluno")) {
             nota.av3,
             nota.prova_professor,
             nota.prova_trimestral,
-            nota.media_avaliacoes
+            nota.media_avaliacoes,
+            nota.media_final
         ];
 
         campos.forEach((valor, indice) => {
@@ -68,8 +69,8 @@ if (verificarAcesso("aluno")) {
         const correspondencia = texto.match(/^(-?\d+)(?:\.(\d{1,2}))?$/);
         if (!correspondencia) return texto;
 
-        const casasDecimais = correspondencia[2];
-        return casasDecimais ? texto : `${texto}.0`;
+        const casasDecimais = correspondencia[2] || "";
+        return `${correspondencia[1]}.${casasDecimais.padEnd(2, "0")}`;
     }
 
     function mostrarErro(texto) {

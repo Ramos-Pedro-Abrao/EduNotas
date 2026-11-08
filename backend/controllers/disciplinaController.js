@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const responderErroBanco = require("../utils/responderErroBanco");
 
 async function criarDisciplina(req, res) {
     const { nome } = req.body;
@@ -20,10 +21,7 @@ async function criarDisciplina(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao criar disciplina."
-        });
+        responderErroBanco(res, error, "Erro ao criar disciplina.");
     }
 }
 
@@ -33,10 +31,7 @@ async function listarDisciplinas(req, res) {
         res.status(200).json(disciplinas);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao listar disciplinas."
-        });
+        responderErroBanco(res, error, "Erro ao listar disciplinas.");
     }
 }
 
@@ -58,10 +53,7 @@ async function buscarDisciplina(req, res) {
         res.status(200).json(disciplinas[0]);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao buscar disciplina."
-        });
+        responderErroBanco(res, error, "Erro ao buscar disciplina.");
     }
 }
 
@@ -92,10 +84,7 @@ async function editarDisciplina(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao atualizar disciplina."
-        });
+        responderErroBanco(res, error, "Erro ao atualizar disciplina.");
     }
 }
 
@@ -119,10 +108,7 @@ async function removerDisciplina(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao remover disciplina."
-        });
+        responderErroBanco(res, error, "Erro ao remover disciplina.", "Esta disciplina está atribuída a uma ou mais turmas. Remove essas atribuições primeiro.");
     }
 }
 

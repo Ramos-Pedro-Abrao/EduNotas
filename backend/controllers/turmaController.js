@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const responderErroBanco = require("../utils/responderErroBanco");
 
 async function criarTurma(req, res) {
     const { nome, curso_id, classe_id } = req.body;
@@ -20,17 +21,15 @@ async function criarTurma(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao criar turma."
-        });
+        responderErroBanco(res, error, "Erro ao criar turma.");
     }
 }
 
 async function listarTurmas(req, res) {
     try {
         const [turmas] = await pool.query(
-            `SELECT turmas.id, turmas.nome, cursos.nome AS curso, classes.nome AS classe
+            `SELECT turmas.id, turmas.nome, turmas.curso_id, turmas.classe_id,
+                    cursos.nome AS curso, classes.nome AS classe
              FROM turmas
              JOIN cursos ON turmas.curso_id = cursos.id
              JOIN classes ON turmas.classe_id = classes.id`
@@ -39,10 +38,7 @@ async function listarTurmas(req, res) {
         res.status(200).json(turmas);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao listar turmas."
-        });
+        responderErroBanco(res, error, "Erro ao listar turmas.");
     }
 }
 
@@ -51,7 +47,8 @@ async function buscarTurma(req, res) {
 
     try {
         const [turmas] = await pool.query(
-            `SELECT turmas.id, turmas.nome, cursos.nome AS curso, classes.nome AS classe
+            `SELECT turmas.id, turmas.nome, turmas.curso_id, turmas.classe_id,
+                    cursos.nome AS curso, classes.nome AS classe
              FROM turmas
              JOIN cursos ON turmas.curso_id = cursos.id
              JOIN classes ON turmas.classe_id = classes.id
@@ -68,10 +65,7 @@ async function buscarTurma(req, res) {
         res.status(200).json(turmas[0]);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao buscar turma."
-        });
+        responderErroBanco(res, error, "Erro ao buscar turma.");
     }
 }
 
@@ -102,10 +96,7 @@ async function editarTurma(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao atualizar turma."
-        });
+        responderErroBanco(res, error, "Erro ao atualizar turma.");
     }
 }
 
@@ -129,10 +120,7 @@ async function removerTurma(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao remover turma."
-        });
+        responderErroBanco(res, error, "Erro ao remover turma.", "Esta turma tem alunos ou lições associadas. Remove-os primeiro.");
     }
 }
 

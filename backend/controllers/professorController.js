@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const pool = require("../config/database");
+const { calcularMedias } = require("../services/mediaService");
 
 async function minhasLecoes(req, res) {
     try {
@@ -72,7 +73,10 @@ async function alunosDaMinhaLecao(req, res) {
             [lecao_id, lecoes[0].turma_id]
         );
 
-        res.status(200).json(alunos);
+        res.status(200).json(alunos.map((aluno) => ({
+            ...aluno,
+            ...calcularMedias(aluno)
+        })));
     } catch (error) {
         console.error(error);
         res.status(500).json({ erro: "Erro ao consultar os alunos da disciplina." });
@@ -101,7 +105,7 @@ async function criarProfessor(req, res) {
             [email, senhaHash]
         );
 
-        await conexao.query(
+        const [professor] = await conexao.query(
             `INSERT INTO professores (nome, telefone, utilizador_id)
              VALUES (?, ?, ?)`,
             [nome, telefone, utilizador.insertId]
@@ -110,7 +114,8 @@ async function criarProfessor(req, res) {
         await conexao.commit();
 
         res.status(201).json({
-            mensagem: "Professor criado com sucesso!"
+            mensagem: "Professor criado com sucesso!",
+            id: professor.insertId
         });
 
     } catch (error) {
@@ -239,6 +244,12 @@ async function removerProfessor(req, res) {
         });
 
     } catch (error) {
+        if (error.code === "ER_ROW_IS_REFERENCED_2") {
+            return res.status(409).json({
+                erro: "Este professor tem atribuições. Remove-as primeiro."
+            });
+        }
+
         console.error(error);
         res.status(500).json({
             erro: "Erro ao remover professor."

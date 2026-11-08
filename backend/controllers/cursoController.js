@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const responderErroBanco = require("../utils/responderErroBanco");
 
 async function criarCurso(req, res) {
     const { nome, descricao } = req.body;
@@ -20,10 +21,7 @@ async function criarCurso(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao criar curso."
-        });
+        responderErroBanco(res, error, "Erro ao criar curso.");
     }
 }
 
@@ -33,10 +31,7 @@ async function listarCursos(req, res) {
         res.status(200).json(cursos);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao listar cursos."
-        });
+        responderErroBanco(res, error, "Erro ao listar cursos.");
     }
 }
 
@@ -58,10 +53,7 @@ async function buscarCurso(req, res) {
         res.status(200).json(cursos[0]);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao buscar curso."
-        });
+        responderErroBanco(res, error, "Erro ao buscar curso.");
     }
 }
 
@@ -92,10 +84,7 @@ async function editarCurso(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao atualizar curso."
-        });
+        responderErroBanco(res, error, "Erro ao atualizar curso.");
     }
 }
 
@@ -119,10 +108,7 @@ async function removerCurso(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            erro: "Erro ao remover curso."
-        });
+        responderErroBanco(res, error, "Erro ao remover curso.", "Este curso tem turmas associadas. Remove-as primeiro.");
     }
 }
 

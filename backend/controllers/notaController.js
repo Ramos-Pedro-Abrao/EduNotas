@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const { calcularMedias } = require("../services/mediaService");
 
 async function lancarNota(req, res) {
     const { aluno_id, lecao_id, av1, av2, av3, prova_professor, prova_trimestral } = req.body;
@@ -122,16 +123,10 @@ async function minhasNotas(req, res) {
             [alunoId]
         );
 
-        const notasComMedia = notas.map(nota => {
-            const { av1, av2, av3 } = nota;
-            let media = null;
-
-            if (av1 !== null && av2 !== null && av3 !== null) {
-                media = ((Number(av1) + Number(av2) + Number(av3)) / 3).toFixed(2);
-            }
-
-            return { ...nota, media_avaliacoes: media };
-        });
+        const notasComMedia = notas.map((nota) => ({
+            ...nota,
+            ...calcularMedias(nota)
+        }));
 
         res.status(200).json(notasComMedia);
 
@@ -177,7 +172,10 @@ async function notasPorLecao(req, res) {
             [lecao_id]
         );
 
-        res.status(200).json(notas);
+        res.status(200).json(notas.map((nota) => ({
+            ...nota,
+            ...calcularMedias(nota)
+        })));
 
     } catch (error) {
         console.error(error);
