@@ -95,10 +95,16 @@
                 <p id="estado-atribuicoes" class="notice error" role="status" hidden></p>
 
                 <form id="form-atribuicao" class="assignment-form">
-                    <label for="atribuicao-turma">Turma</label>
-                    <select id="atribuicao-turma" name="turma_id" required></select>
-                    <label for="atribuicao-disciplina">Disciplina</label>
-                    <select id="atribuicao-disciplina" name="disciplina_id" required></select>
+                    <label for="curso-atribuicao">Curso</label>
+                    <select id="curso-atribuicao" required></select>
+                    <fieldset class="assignment-options">
+                        <legend>Turmas</legend>
+                        <div id="turmas-atribuicao" class="checkbox-list"></div>
+                    </fieldset>
+                    <fieldset class="assignment-options">
+                        <legend>Disciplinas</legend>
+                        <div id="disciplinas-atribuicao" class="checkbox-list"></div>
+                    </fieldset>
                     <button class="button button-primary" id="guardar-atribuicao" type="submit">Atribuir</button>
                 </form>
 
@@ -106,7 +112,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">Turma</th>
+                                <th scope="col">Curso / Classe / Turma</th>
                                 <th scope="col">Disciplina</th>
                                 <th scope="col" class="actions-heading">Remover</th>
                             </tr>
@@ -140,6 +146,22 @@
                 <label for="senha">Senha inicial</label>
                 <input id="senha" name="senha" type="password" placeholder="Mínimo de 6 caracteres" autocomplete="new-password" minlength="6">
             </div>
+            <section id="atribuicoes-iniciais" class="initial-assignments">
+                <h3>Atribuições</h3>
+                <label for="curso-inicial">Curso</label>
+                <select id="curso-inicial"></select>
+                <fieldset class="assignment-options">
+                    <legend>Turmas</legend>
+                    <div id="turmas-iniciais" class="checkbox-list"></div>
+                </fieldset>
+                <fieldset class="assignment-options">
+                    <legend>Disciplinas</legend>
+                    <div id="disciplinas-iniciais" class="checkbox-list"></div>
+                </fieldset>
+                <button class="button button-secondary" id="adicionar-bloco" type="button">Adicionar estas atribuições</button>
+                <p id="estado-inicial" class="course-hint"></p>
+                <div id="blocos-pendentes" class="pending-assignment-list"></div>
+            </section>
             <p id="erro-formulario" class="form-error" role="alert"></p>
             <div class="dialog-actions">
                 <button class="button button-secondary" id="cancelar-dialogo" type="button">Cancelar</button>

@@ -84,18 +84,61 @@ async function alunosDaMinhaLecao(req, res) {
 }
 
 async function criarProfessor(req, res) {
-    const { nome, email, telefone, senha } = req.body;
+    const { nome, email, telefone, senha, atribuicoes = [] } = req.body;
 
     if (!nome || !email || !senha) {
         return res.status(400).json({
             erro: "Nome, email e senha são obrigatórios."
         });
     }
+    if (!Array.isArray(atribuicoes)) {
+        return res.status(400).json({ erro: "Atribuições devem ser enviadas como uma lista." });
+    }
+
+    const atribuicoesUnicas = [];
+    const paresVistos = new Set();
+    for (const atribuicao of atribuicoes) {
+        const turmaId = Number(atribuicao?.turma_id);
+        const disciplinaId = Number(atribuicao?.disciplina_id);
+        if (!Number.isInteger(turmaId) || turmaId < 1 || !Number.isInteger(disciplinaId) || disciplinaId < 1) {
+            return res.status(400).json({ erro: "Cada atribuição deve conter uma turma e uma disciplina válidas." });
+        }
+
+        const chave = `${turmaId}:${disciplinaId}`;
+        if (!paresVistos.has(chave)) {
+            paresVistos.add(chave);
+            atribuicoesUnicas.push({ turma_id: turmaId, disciplina_id: disciplinaId });
+        }
+    }
 
     const conexao = await pool.getConnection();
 
     try {
         await conexao.beginTransaction();
+
+        for (const atribuicao of atribuicoesUnicas) {
+            const [turmas] = await conexao.query(
+                `SELECT turmas.id
+                 FROM turmas
+                 JOIN classes ON turmas.classe_id = classes.id
+                 JOIN curso_disciplinas ON classes.curso_id = curso_disciplinas.curso_id
+                 WHERE turmas.id = ? AND curso_disciplinas.disciplina_id = ?
+                 LIMIT 1`,
+                [atribuicao.turma_id, atribuicao.disciplina_id]
+            );
+            if (turmas.length === 0) {
+                const [turmaExiste] = await conexao.query(
+                    `SELECT id FROM turmas WHERE id = ?`,
+                    [atribuicao.turma_id]
+                );
+                await conexao.rollback();
+                return res.status(400).json({
+                    erro: turmaExiste.length === 0
+                        ? "Uma das turmas selecionadas não existe."
+                        : "Esta disciplina não pertence ao curso de uma das turmas selecionadas."
+                });
+            }
+        }
 
         const senhaHash = await bcrypt.hash(senha, 10);
 
@@ -111,6 +154,14 @@ async function criarProfessor(req, res) {
             [nome, telefone, utilizador.insertId]
         );
 
+        for (const atribuicao of atribuicoesUnicas) {
+            await conexao.query(
+                `INSERT INTO lecoes (professor_id, turma_id, disciplina_id)
+                 VALUES (?, ?, ?)`,
+                [professor.insertId, atribuicao.turma_id, atribuicao.disciplina_id]
+            );
+        }
+
         await conexao.commit();
 
         res.status(201).json({
@@ -121,6 +172,12 @@ async function criarProfessor(req, res) {
     } catch (error) {
 
         await conexao.rollback();
+
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                erro: "Já existe um professor com este email."
+            });
+        }
 
         console.error(error);
 
