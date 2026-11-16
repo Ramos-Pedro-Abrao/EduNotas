@@ -16,6 +16,7 @@ if (verificarAcesso("professor")) {
     let lecaoSelecionada = null;
     let turmasProfessor = [];
     let alunosProfessor = [];
+    const alunosPautaExpandidos = new Set();
     let avisoTimer;
     let pautaTimer;
     let alunosTimer;
@@ -256,6 +257,7 @@ if (verificarAcesso("professor")) {
 
     async function selecionarLecao(lecao, cartao) {
         lecaoSelecionada = lecao;
+        alunosPautaExpandidos.clear();
         document.querySelectorAll(".lesson-card").forEach((item) => item.setAttribute("aria-pressed", String(item === cartao)));
         document.getElementById("pauta-titulo").textContent = `${lecao.disciplina} · ${lecao.turma}`;
         document.getElementById("pauta-contexto").textContent = `${lecao.classe} · ${lecao.curso}`;
@@ -281,7 +283,17 @@ if (verificarAcesso("professor")) {
                 return;
             }
 
-            tabelaPauta.replaceChildren(...resposta.dados.map(criarLinhaPauta));
+            const alunos = new Map();
+            resposta.dados.forEach((periodo) => {
+                let aluno = alunos.get(periodo.id);
+                if (!aluno) {
+                    aluno = { id: periodo.id, nome: periodo.nome, trimestres: [] };
+                    alunos.set(periodo.id, aluno);
+                }
+                aluno.trimestres.push(periodo);
+            });
+
+            tabelaPauta.replaceChildren(...[...alunos.values()].map(criarLinhaPauta));
         } catch (error) {
             mostrarAviso(mensagemPauta, "Não foi possível ligar ao servidor. Tenta novamente.", "error");
             tabelaPauta.replaceChildren(criarEstadoTabela("Não foi possível carregar a pauta."));
@@ -289,15 +301,79 @@ if (verificarAcesso("professor")) {
     }
 
     function criarLinhaPauta(aluno) {
-        const linha = document.createElement("tr");
-        const trimestre = Number(aluno.trimestre);
-        const nome = document.createElement("td");
-        nome.textContent = aluno.nome;
-        linha.append(nome);
+        const fragmento = document.createDocumentFragment();
+        const linhaResumo = document.createElement("tr");
+        const celulaResumo = document.createElement("td");
+        const detalheId = `pauta-aluno-${aluno.id}`;
+        const expandido = alunosPautaExpandidos.has(String(aluno.id));
+        const botaoAluno = document.createElement("button");
+        botaoAluno.type = "button";
+        botaoAluno.className = "grade-student-toggle";
+        botaoAluno.textContent = aluno.nome;
+        botaoAluno.setAttribute("aria-controls", detalheId);
+        botaoAluno.setAttribute("aria-expanded", String(expandido));
+        celulaResumo.append(botaoAluno);
+        linhaResumo.append(celulaResumo);
 
-        const periodo = document.createElement("td");
-        periodo.textContent = `${trimestre}.º trimestre`;
-        linha.append(periodo);
+        const linhaDetalhe = document.createElement("tr");
+        linhaDetalhe.id = detalheId;
+        linhaDetalhe.className = "grade-detail-row";
+        linhaDetalhe.hidden = !expandido;
+        const celulaDetalhe = document.createElement("td");
+        celulaDetalhe.className = "grade-detail-cell";
+        const detalhe = document.createElement("div");
+        detalhe.className = "grade-detail-wrap";
+        const tabelaTrimestres = document.createElement("table");
+        tabelaTrimestres.className = "grade-period-table";
+
+        const cabecalho = document.createElement("thead");
+        const linhaCabecalho = document.createElement("tr");
+        [
+            "Trimestre",
+            "Avaliação 1",
+            "Avaliação 2",
+            "Avaliação 3",
+            "Prova do professor",
+            "Prova trimestral / final",
+            "Média das avaliações",
+            "Média final",
+            "Ação"
+        ].forEach((rotulo) => {
+            const coluna = document.createElement("th");
+            coluna.scope = "col";
+            coluna.textContent = rotulo;
+            linhaCabecalho.append(coluna);
+        });
+        cabecalho.append(linhaCabecalho);
+
+        const corpo = document.createElement("tbody");
+        corpo.append(...aluno.trimestres.map((periodo) => criarLinhaTrimestre(aluno, periodo)));
+        tabelaTrimestres.append(cabecalho, corpo);
+        detalhe.append(tabelaTrimestres);
+        celulaDetalhe.append(detalhe);
+        linhaDetalhe.append(celulaDetalhe);
+
+        botaoAluno.addEventListener("click", () => {
+            const abrir = botaoAluno.getAttribute("aria-expanded") !== "true";
+            botaoAluno.setAttribute("aria-expanded", String(abrir));
+            linhaDetalhe.hidden = !abrir;
+            if (abrir) {
+                alunosPautaExpandidos.add(String(aluno.id));
+            } else {
+                alunosPautaExpandidos.delete(String(aluno.id));
+            }
+        });
+
+        fragmento.append(linhaResumo, linhaDetalhe);
+        return fragmento;
+    }
+
+    function criarLinhaTrimestre(aluno, periodo) {
+        const linha = document.createElement("tr");
+        const trimestre = Number(periodo.trimestre);
+        const celulaTrimestre = document.createElement("td");
+        celulaTrimestre.textContent = `${trimestre}.º trimestre`;
+        linha.append(celulaTrimestre);
 
         const provaPeriodo = trimestre === 3
             ? ["prova_final", "Prova final"]
@@ -320,20 +396,20 @@ if (verificarAcesso("professor")) {
             campo.step = "0.01";
             campo.inputMode = "decimal";
             campo.placeholder = "—";
-            campo.value = aluno[chave] === null ? "" : (aluno[chave] ?? "");
+            campo.value = periodo[chave] === null ? "" : (periodo[chave] ?? "");
             campo.dataset.avaliacao = chave;
-            campo.setAttribute("aria-label", `${rotulo} de ${aluno.nome}`);
+            campo.setAttribute("aria-label", `${rotulo} de ${aluno.nome}, ${trimestre}.º trimestre`);
             campo.addEventListener("input", () => campo.removeAttribute("aria-invalid"));
             celula.append(campo);
             linha.append(celula);
         });
 
         const mediaAvaliacoes = document.createElement("td");
-        mediaAvaliacoes.textContent = formatarMedia(aluno.media_avaliacoes);
+        mediaAvaliacoes.textContent = formatarMedia(periodo.media_avaliacoes);
         linha.append(mediaAvaliacoes);
 
         const mediaFinal = document.createElement("td");
-        mediaFinal.textContent = formatarMedia(aluno.media_final);
+        mediaFinal.textContent = formatarMedia(periodo.media_final);
         linha.append(mediaFinal);
 
         const celulaAcao = document.createElement("td");
@@ -412,7 +488,7 @@ if (verificarAcesso("professor")) {
         const linha = document.createElement("tr");
         const celula = document.createElement("td");
         celula.className = "table-state";
-        celula.colSpan = 10;
+        celula.colSpan = 1;
         celula.textContent = texto;
         linha.append(celula);
         return linha;
