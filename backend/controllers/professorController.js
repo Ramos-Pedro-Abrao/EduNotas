@@ -62,14 +62,19 @@ async function alunosDaMinhaLecao(req, res) {
         }
 
         const [alunos] = await pool.query(
-            `SELECT alunos.id, alunos.nome, alunos.matricula,
-                    notas.av1, notas.av2, notas.av3,
-                    notas.prova_professor, notas.prova_trimestral
+                `SELECT alunos.id, alunos.nome, alunos.matricula, periodos.trimestre,
+                          notas.av1, notas.av2, notas.av3,
+                          notas.prova_professor, notas.prova_trimestral, notas.prova_final
              FROM alunos
+                 CROSS JOIN (
+                      SELECT 1 AS trimestre UNION ALL SELECT 2 UNION ALL SELECT 3
+                 ) AS periodos
              LEFT JOIN notas
-                ON notas.aluno_id = alunos.id AND notas.lecao_id = ?
+                     ON notas.aluno_id = alunos.id
+                     AND notas.lecao_id = ?
+                     AND notas.trimestre = periodos.trimestre
              WHERE alunos.turma_id = ?
-             ORDER BY alunos.nome`,
+                 ORDER BY alunos.nome, periodos.trimestre`,
             [lecao_id, lecoes[0].turma_id]
         );
 

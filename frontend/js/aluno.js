@@ -41,21 +41,23 @@ if (verificarAcesso("aluno")) {
 
     function criarLinhaNota(nota) {
         const linha = document.createElement("tr");
+        const trimestre = Number(nota.trimestre);
         const campos = [
             nota.disciplina,
             nota.turma,
+            `${trimestre}.º trimestre`,
             nota.av1,
             nota.av2,
             nota.av3,
             nota.prova_professor,
-            nota.prova_trimestral,
+            trimestre === 3 ? nota.prova_final : nota.prova_trimestral,
             nota.media_avaliacoes,
             nota.media_final
         ];
 
         campos.forEach((valor, indice) => {
             const celula = document.createElement("td");
-            celula.textContent = indice < 2 ? (valor ?? "-") : formatarNota(valor);
+            celula.textContent = indice < 3 ? (valor ?? "-") : formatarNota(valor);
             linha.append(celula);
         });
 

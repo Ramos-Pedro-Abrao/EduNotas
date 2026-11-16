@@ -79,12 +79,14 @@ CREATE TABLE IF NOT EXISTS notas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     aluno_id INT NOT NULL,
     lecao_id INT NOT NULL,
+    trimestre TINYINT UNSIGNED NOT NULL DEFAULT 1,
     av1 DECIMAL(5, 2),
     av2 DECIMAL(5, 2),
     av3 DECIMAL(5, 2),
     prova_professor DECIMAL(5, 2),
     prova_trimestral DECIMAL(5, 2),
-    UNIQUE KEY uq_notas_aluno_lecao (aluno_id, lecao_id),
+    prova_final DECIMAL(5, 2),
+    UNIQUE KEY uq_notas_aluno_lecao_trimestre (aluno_id, lecao_id, trimestre),
     FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE,
     FOREIGN KEY (lecao_id) REFERENCES lecoes(id) ON DELETE CASCADE
 );

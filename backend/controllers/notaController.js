@@ -2,9 +2,35 @@ const pool = require("../config/database");
 const { calcularMedias } = require("../services/mediaService");
 
 async function lancarNota(req, res) {
-    const { aluno_id, lecao_id, av1, av2, av3, prova_professor, prova_trimestral } = req.body;
+    const {
+        aluno_id,
+        lecao_id,
+        trimestre,
+        av1,
+        av2,
+        av3,
+        prova_professor,
+        prova_trimestral,
+        prova_final
+    } = req.body;
 
-    const camposNota = { av1, av2, av3, prova_professor, prova_trimestral };
+    const numeroTrimestre = Number(trimestre);
+    if (!Number.isInteger(numeroTrimestre) || numeroTrimestre < 1 || numeroTrimestre > 3) {
+        return res.status(400).json({ erro: "Indica um trimestre válido (1, 2 ou 3)." });
+    }
+
+    const provaDoPeriodo = numeroTrimestre === 3 ? prova_final : prova_trimestral;
+    const provaIncorreta = numeroTrimestre === 3
+        ? prova_trimestral !== undefined && prova_trimestral !== null && prova_trimestral !== ""
+        : prova_final !== undefined && prova_final !== null && prova_final !== "";
+
+    const camposNota = {
+        av1,
+        av2,
+        av3,
+        prova_professor,
+        [numeroTrimestre === 3 ? "prova_final" : "prova_trimestral"]: provaDoPeriodo
+    };
     const notaInvalida = Object.values(camposNota).some((valor) =>
         valor !== undefined && valor !== null && valor !== "" &&
         (!Number.isFinite(Number(valor)) || Number(valor) < 0 || Number(valor) > 20)
@@ -13,9 +39,9 @@ async function lancarNota(req, res) {
         valor === undefined || valor === null || valor === ""
     );
 
-    if (!aluno_id || !lecao_id || notaInvalida || semNotas) {
+    if (!aluno_id || !lecao_id || provaIncorreta || notaInvalida || semNotas) {
         return res.status(400).json({
-            erro: "aluno_id e lecao_id são obrigatórios; as notas devem estar entre 0 e 20 valores."
+            erro: "aluno_id, lecao_id e trimestre são obrigatórios; as notas devem estar entre 0 e 20 valores e usar a prova correspondente ao trimestre."
         });
     }
 
@@ -68,19 +94,20 @@ async function lancarNota(req, res) {
 
         // 3. Criar ou atualizar a nota
         await pool.query(
-            `INSERT INTO notas (aluno_id, lecao_id, av1, av2, av3, prova_professor, prova_trimestral)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
+            `INSERT INTO notas (aluno_id, lecao_id, trimestre, av1, av2, av3, prova_professor, prova_trimestral, prova_final)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 av1 = COALESCE(?, av1),
                 av2 = COALESCE(?, av2),
                 av3 = COALESCE(?, av3),
                 prova_professor = COALESCE(?, prova_professor),
-                prova_trimestral = COALESCE(?, prova_trimestral)`,
+                prova_trimestral = COALESCE(?, prova_trimestral),
+                prova_final = COALESCE(?, prova_final)`,
             [
-                aluno_id, lecao_id, valoresNota.av1, valoresNota.av2, valoresNota.av3,
-                valoresNota.prova_professor, valoresNota.prova_trimestral,
+                aluno_id, lecao_id, numeroTrimestre, valoresNota.av1, valoresNota.av2, valoresNota.av3,
+                valoresNota.prova_professor, valoresNota.prova_trimestral, valoresNota.prova_final,
                 valoresNota.av1, valoresNota.av2, valoresNota.av3,
-                valoresNota.prova_professor, valoresNota.prova_trimestral
+                valoresNota.prova_professor, valoresNota.prova_trimestral, valoresNota.prova_final
             ]
         );
 
@@ -113,13 +140,15 @@ async function minhasNotas(req, res) {
         const alunoId = alunos[0].id;
 
         const [notas] = await pool.query(
-            `SELECT notas.av1, notas.av2, notas.av3, notas.prova_professor, notas.prova_trimestral,
+                `SELECT notas.trimestre, notas.av1, notas.av2, notas.av3,
+                    notas.prova_professor, notas.prova_trimestral, notas.prova_final,
                     disciplinas.nome AS disciplina, turmas.nome AS turma
              FROM notas
              JOIN lecoes ON notas.lecao_id = lecoes.id
              JOIN disciplinas ON lecoes.disciplina_id = disciplinas.id
              JOIN turmas ON lecoes.turma_id = turmas.id
-             WHERE notas.aluno_id = ?`,
+             WHERE notas.aluno_id = ?
+             ORDER BY disciplinas.nome, turmas.nome, notas.trimestre`,
             [alunoId]
         );
 
@@ -165,7 +194,8 @@ async function notasPorLecao(req, res) {
 
         const [notas] = await pool.query(
             `SELECT notas.id, alunos.nome AS aluno,
-                    notas.av1, notas.av2, notas.av3, notas.prova_professor, notas.prova_trimestral
+                    notas.trimestre, notas.av1, notas.av2, notas.av3,
+                    notas.prova_professor, notas.prova_trimestral, notas.prova_final
              FROM notas
              JOIN alunos ON notas.aluno_id = alunos.id
              WHERE notas.lecao_id = ?`,

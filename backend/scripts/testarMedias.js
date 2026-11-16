@@ -14,6 +14,28 @@ assert.deepEqual(casoCompleto, {
     media_final: 13.33
 });
 
+assert.deepEqual(calcularMedias({
+    trimestre: 3,
+    av1: "10.00",
+    av2: "14.00",
+    av3: "12.00",
+    prova_professor: "13.00",
+    prova_final: "18.00"
+}), {
+    media_avaliacoes: 12,
+    media_final: 14.33
+});
+
+assert.equal(calcularMedias({
+    trimestre: 3,
+    av1: 10,
+    av2: 14,
+    av3: 12,
+    prova_professor: 13,
+    prova_final: null,
+    prova_trimestral: 18
+}).media_final, null, "o 3.º trimestre deve exigir a prova final");
+
 const notaCompleta = {
     av1: "10.00",
     av2: "14.00",

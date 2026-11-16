@@ -290,16 +290,24 @@ if (verificarAcesso("professor")) {
 
     function criarLinhaPauta(aluno) {
         const linha = document.createElement("tr");
+        const trimestre = Number(aluno.trimestre);
         const nome = document.createElement("td");
         nome.textContent = aluno.nome;
         linha.append(nome);
 
+        const periodo = document.createElement("td");
+        periodo.textContent = `${trimestre}.º trimestre`;
+        linha.append(periodo);
+
+        const provaPeriodo = trimestre === 3
+            ? ["prova_final", "Prova final"]
+            : ["prova_trimestral", "Prova trimestral"];
         const campos = [
             ["av1", "Avaliação 1"],
             ["av2", "Avaliação 2"],
             ["av3", "Avaliação 3"],
             ["prova_professor", "Prova do professor"],
-            ["prova_trimestral", "Prova trimestral"]
+            provaPeriodo
         ];
 
         campos.forEach(([chave, rotulo]) => {
@@ -333,13 +341,13 @@ if (verificarAcesso("professor")) {
         guardar.type = "button";
         guardar.className = "button button-primary grade-save";
         guardar.textContent = "Guardar";
-        guardar.addEventListener("click", () => guardarNotas(aluno.id, linha, guardar));
+        guardar.addEventListener("click", () => guardarNotas(aluno.id, trimestre, linha, guardar));
         celulaAcao.append(guardar);
         linha.append(celulaAcao);
         return linha;
     }
 
-    async function guardarNotas(alunoId, linha, botao) {
+    async function guardarNotas(alunoId, trimestre, linha, botao) {
         const campos = [...linha.querySelectorAll(".grade-input")];
         let valido = true;
         const notas = {};
@@ -374,6 +382,7 @@ if (verificarAcesso("professor")) {
             const resposta = await api("/api/notas", "POST", {
                 aluno_id: alunoId,
                 lecao_id: lecaoSelecionada.id,
+                trimestre,
                 ...notas
             });
 
@@ -403,7 +412,7 @@ if (verificarAcesso("professor")) {
         const linha = document.createElement("tr");
         const celula = document.createElement("td");
         celula.className = "table-state";
-        celula.colSpan = 9;
+        celula.colSpan = 10;
         celula.textContent = texto;
         linha.append(celula);
         return linha;
