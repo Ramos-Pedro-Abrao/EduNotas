@@ -32,18 +32,90 @@ if (verificarAcesso("aluno")) {
                 return;
             }
 
-            tabelaNotas.replaceChildren(...resposta.dados.map(criarLinhaNota));
+            const disciplinas = new Map();
+            resposta.dados.forEach((nota) => {
+                let disciplina = disciplinas.get(nota.disciplina);
+                if (!disciplina) {
+                    disciplina = { nome: nota.disciplina, notas: [] };
+                    disciplinas.set(nota.disciplina, disciplina);
+                }
+                disciplina.notas.push(nota);
+            });
+
+            tabelaNotas.replaceChildren(...[...disciplinas.values()].map(criarLinhaDisciplina));
             tabelaNotasWrap.hidden = false;
         } catch (error) {
             mostrarErro("Não foi possível ligar ao servidor. Verifica a ligação e tenta novamente.");
         }
     }
 
+    function criarLinhaDisciplina(disciplina) {
+        const fragmento = document.createDocumentFragment();
+        const linhaResumo = document.createElement("tr");
+        linhaResumo.className = "grade-summary-row";
+        const celulaResumo = document.createElement("td");
+        const detalheId = `notas-disciplina-${encodeURIComponent(disciplina.nome)}`;
+        const botaoDisciplina = document.createElement("button");
+        botaoDisciplina.type = "button";
+        botaoDisciplina.className = "grade-subject-toggle";
+        botaoDisciplina.textContent = disciplina.nome;
+        botaoDisciplina.setAttribute("aria-controls", detalheId);
+        botaoDisciplina.setAttribute("aria-expanded", "false");
+        celulaResumo.append(botaoDisciplina);
+        linhaResumo.append(celulaResumo);
+
+        const linhaDetalhe = document.createElement("tr");
+        linhaDetalhe.id = detalheId;
+        linhaDetalhe.className = "grade-detail-row";
+        linhaDetalhe.hidden = true;
+        const celulaDetalhe = document.createElement("td");
+        celulaDetalhe.className = "grade-detail-cell";
+        const detalhe = document.createElement("div");
+        detalhe.className = "grade-detail-wrap";
+        const tabelaTrimestres = document.createElement("table");
+        tabelaTrimestres.className = "grade-period-table";
+
+        const cabecalho = document.createElement("thead");
+        const linhaCabecalho = document.createElement("tr");
+        [
+            "Turma",
+            "Trimestre",
+            "Avaliação 1",
+            "Avaliação 2",
+            "Avaliação 3",
+            "Prova do professor",
+            "Prova trimestral / final",
+            "Média das avaliações",
+            "Média final"
+        ].forEach((rotulo) => {
+            const coluna = document.createElement("th");
+            coluna.scope = "col";
+            coluna.textContent = rotulo;
+            linhaCabecalho.append(coluna);
+        });
+        cabecalho.append(linhaCabecalho);
+
+        const corpo = document.createElement("tbody");
+        corpo.append(...disciplina.notas.map(criarLinhaNota));
+        tabelaTrimestres.append(cabecalho, corpo);
+        detalhe.append(tabelaTrimestres);
+        celulaDetalhe.append(detalhe);
+        linhaDetalhe.append(celulaDetalhe);
+
+        botaoDisciplina.addEventListener("click", () => {
+            const abrir = botaoDisciplina.getAttribute("aria-expanded") !== "true";
+            botaoDisciplina.setAttribute("aria-expanded", String(abrir));
+            linhaDetalhe.hidden = !abrir;
+        });
+
+        fragmento.append(linhaResumo, linhaDetalhe);
+        return fragmento;
+    }
+
     function criarLinhaNota(nota) {
         const linha = document.createElement("tr");
         const trimestre = Number(nota.trimestre);
         const campos = [
-            nota.disciplina,
             nota.turma,
             `${trimestre}.º trimestre`,
             nota.av1,
@@ -57,7 +129,7 @@ if (verificarAcesso("aluno")) {
 
         campos.forEach((valor, indice) => {
             const celula = document.createElement("td");
-            celula.textContent = indice < 3 ? (valor ?? "-") : formatarNota(valor);
+            celula.textContent = indice < 2 ? (valor ?? "-") : formatarNota(valor);
             linha.append(celula);
         });
 
