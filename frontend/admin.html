@@ -50,6 +50,31 @@
                 </article>
             </section>
 
+            <section class="panel score-permission-panel" aria-labelledby="permissao-notas-titulo">
+                <div class="panel-heading">
+                    <div>
+                        <h2 id="permissao-notas-titulo">Lançamento de notas</h2>
+                        <p>Define quem pode lançar ou atualizar notas neste momento.</p>
+                    </div>
+                </div>
+                <p id="mensagem-permissao-notas" class="notice" role="status" aria-live="polite"></p>
+                <form id="form-permissao-notas" class="score-permission-form">
+                    <div class="score-permission-field">
+                        <label for="modo-lancamento">Permissão</label>
+                        <select id="modo-lancamento" required>
+                            <option value="fechado">Fechado para todos</option>
+                            <option value="todos">Todos os professores</option>
+                            <option value="professor">Um professor específico</option>
+                        </select>
+                    </div>
+                    <div id="campo-professor-lancamento" class="score-permission-field" hidden>
+                        <label for="professor-lancamento">Professor autorizado</label>
+                        <select id="professor-lancamento"></select>
+                    </div>
+                    <button class="button button-primary" type="submit">Guardar permissão</button>
+                </form>
+            </section>
+
             <section class="panel" aria-labelledby="lista-titulo">
                 <div class="panel-heading">
                     <div>

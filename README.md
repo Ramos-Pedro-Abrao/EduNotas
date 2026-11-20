@@ -13,6 +13,11 @@ depois de criares as tabelas `turmas` e `alunos`. A migração acrescenta a rela
 entre alunos e turmas; os alunos existentes ficam sem turma até serem atribuídos
 pela administração.
 
+Em bases de dados existentes, aplica também
+[`database/migrations/2026-11-20-configuracao-lancamento-notas.sql`](./database/migrations/2026-11-20-configuracao-lancamento-notas.sql)
+para criar a configuração administrativa de lançamento de notas, que começa
+fechada.
+
 ## Iniciar o servidor
 
 Configura as variáveis de ambiente indicadas em `backend/.env` e inicia a API:

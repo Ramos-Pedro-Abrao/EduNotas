@@ -67,6 +67,23 @@ async function lancarNota(req, res) {
 
         const professorId = professores[0].id;
 
+        const [configuracoes] = await pool.query(
+            `SELECT modo, professor_id FROM configuracao_notas WHERE id = 1`
+        );
+        const configuracao = configuracoes[0];
+
+        if (!configuracao || configuracao.modo === "fechado") {
+            return res.status(403).json({
+                erro: "O lançamento de notas está fechado pelo administrador."
+            });
+        }
+
+        if (configuracao.modo === "professor" && Number(configuracao.professor_id) !== Number(professorId)) {
+            return res.status(403).json({
+                erro: "Neste momento, apenas o professor autorizado pelo administrador pode lançar notas."
+            });
+        }
+
         // 2. Confirmar que a Lecao pertence a este professor
         const [lecoes] = await pool.query(
             `SELECT id FROM lecoes WHERE id = ? AND professor_id = ?`,

@@ -106,6 +106,13 @@ h1 { color: #152b43; font-size: clamp(24px, 3vw, 31px); font-weight: 800; }
 .notice:not(:empty) { display: block; }
 .notice.success { color: #176f4e; background: #eaf8f1; }
 .notice.error { color: #a13d3d; background: #fff0ef; }
+.score-permission-panel { margin-bottom: 23px; }
+.score-permission-form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; align-items: end; gap: 12px; padding: 0 24px 20px; }
+.score-permission-field { display: grid; gap: 7px; }
+.score-permission-field label { color: #44566a; font-size: 11px; font-weight: 700; }
+.score-permission-form select { min-width: 0; height: 41px; padding: 0 10px; border: 1px solid #e1e7ee; border-radius: 7px; color: #233a52; background: white; font: inherit; font-size: 12px; }
+.score-permission-form button { grid-column: 3; }
+.score-permission-field[hidden] { display: none; }
 .table-wrap { width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 thead { background: #f8f9fc; }
@@ -237,6 +244,8 @@ td:first-child { color: #263c54; font-weight: 600; }
     .search-box { width: 100%; }
     .assignment-form { grid-template-columns: 1fr; padding-right: 16px; padding-left: 16px; }
     .assignment-form > label, .assignment-form > select, .assignment-form button { grid-column: 1; }
+    .score-permission-form { grid-template-columns: 1fr; padding-right: 16px; padding-left: 16px; }
+    .score-permission-form button { grid-column: 1; }
     .course-association-form, .course-turma-form { grid-template-columns: 1fr; padding-right: 16px; padding-left: 16px; }
     .course-association-form label { grid-column: 1; }
     .course-card-list { padding-right: 16px; padding-left: 16px; }

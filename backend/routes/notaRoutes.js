@@ -2,12 +2,31 @@ const express = require("express");
 const router = express.Router();
 
 const autenticar = require("../middlewares/authMiddleware");
+const autorizar = require("../middlewares/autorizar");
+const {
+    obterConfiguracaoLancamento,
+    atualizarConfiguracaoLancamento
+} = require("../controllers/configuracaoNotaController");
 
 const {
     lancarNota,
     minhasNotas,
     notasPorLecao
 } = require("../controllers/notaController");
+
+router.get(
+    "/configuracao",
+    autenticar,
+    autorizar("admin"),
+    obterConfiguracaoLancamento
+);
+
+router.put(
+    "/configuracao",
+    autenticar,
+    autorizar("admin"),
+    atualizarConfiguracaoLancamento
+);
 
 // Professor lança/atualiza nota
 router.post(

@@ -19,6 +19,11 @@ if (verificarAcesso("admin")) {
     const mensagemAtribuicoes = document.getElementById("mensagem-atribuicoes");
     const estadoAtribuicoes = document.getElementById("estado-atribuicoes");
     const tabelaAtribuicoes = document.getElementById("tabela-atribuicoes");
+    const formPermissaoNotas = document.getElementById("form-permissao-notas");
+    const modoLancamento = document.getElementById("modo-lancamento");
+    const professorLancamento = document.getElementById("professor-lancamento");
+    const campoProfessorLancamento = document.getElementById("campo-professor-lancamento");
+    const mensagemPermissaoNotas = document.getElementById("mensagem-permissao-notas");
     const formularioAtribuicao = document.getElementById("form-atribuicao");
     const cursoAtribuicao = document.getElementById("curso-atribuicao");
     const turmasAtribuicao = document.getElementById("turmas-atribuicao");
@@ -49,6 +54,8 @@ if (verificarAcesso("admin")) {
         carregarOpcoesDoCurso(cursoInicial, turmasIniciais, disciplinasIniciais, estadoInicial)
     );
     formularioAtribuicao.addEventListener("submit", guardarAtribuicoesExistentes);
+    modoLancamento.addEventListener("change", atualizarCampoProfessorLancamento);
+    formPermissaoNotas.addEventListener("submit", guardarPermissaoNotas);
     cursoAtribuicao.addEventListener("change", () =>
         carregarOpcoesDoCurso(cursoAtribuicao, turmasAtribuicao, disciplinasAtribuicao, estadoAtribuicoes)
     );
@@ -66,10 +73,74 @@ if (verificarAcesso("admin")) {
             professores = resposta.dados;
             totalProfessores.textContent = String(professores.length);
             renderizarProfessores();
+            preencherProfessoresLancamento();
+            await carregarPermissaoNotas();
         } catch (error) {
             mostrarAviso("Não foi possível ligar ao servidor. Verifica a ligação e tenta novamente.", "error");
             tabela.replaceChildren(criarEstado("Não foi possível carregar os professores."));
         }
+    }
+
+    function preencherProfessoresLancamento() {
+        professorLancamento.replaceChildren();
+        const opcaoInicial = document.createElement("option");
+        opcaoInicial.value = "";
+        opcaoInicial.textContent = "Seleciona um professor";
+        professorLancamento.append(opcaoInicial);
+        for (const professor of professores) {
+            const opcao = document.createElement("option");
+            opcao.value = String(professor.id);
+            opcao.textContent = professor.nome;
+            professorLancamento.append(opcao);
+        }
+    }
+
+    async function carregarPermissaoNotas() {
+        try {
+            const resposta = await api("/api/notas/configuracao");
+            if (!resposta?.ok) {
+                mostrarAvisoPermissaoNotas(erroDaResposta(resposta, "Não foi possível carregar a permissão de notas."), "error");
+                return;
+            }
+            modoLancamento.value = resposta.dados.modo;
+            professorLancamento.value = resposta.dados.professor_id ? String(resposta.dados.professor_id) : "";
+            atualizarCampoProfessorLancamento();
+        } catch (error) {
+            mostrarAvisoPermissaoNotas("Não foi possível ligar ao servidor para carregar a permissão de notas.", "error");
+        }
+    }
+
+    function atualizarCampoProfessorLancamento() {
+        const exigirProfessor = modoLancamento.value === "professor";
+        professorLancamento.hidden = !exigirProfessor;
+        campoProfessorLancamento.hidden = !exigirProfessor;
+        professorLancamento.required = exigirProfessor;
+    }
+
+    async function guardarPermissaoNotas(evento) {
+        evento.preventDefault();
+        const botao = formPermissaoNotas.querySelector('button[type="submit"]');
+        botao.disabled = true;
+        try {
+            const resposta = await api("/api/notas/configuracao", "PUT", {
+                modo: modoLancamento.value,
+                professor_id: modoLancamento.value === "professor" ? Number(professorLancamento.value) : null
+            });
+            if (!resposta?.ok) {
+                mostrarAvisoPermissaoNotas(erroDaResposta(resposta, "Não foi possível atualizar a permissão de notas."), "error");
+                return;
+            }
+            mostrarAvisoPermissaoNotas(resposta.dados.mensagem || "Permissão atualizada.", "success");
+        } catch (error) {
+            mostrarAvisoPermissaoNotas("Não foi possível ligar ao servidor. Tenta novamente.", "error");
+        } finally {
+            botao.disabled = false;
+        }
+    }
+
+    function mostrarAvisoPermissaoNotas(texto, tipo) {
+        mensagemPermissaoNotas.textContent = texto;
+        mensagemPermissaoNotas.className = `notice ${tipo}`;
     }
 
     function renderizarProfessores() {
